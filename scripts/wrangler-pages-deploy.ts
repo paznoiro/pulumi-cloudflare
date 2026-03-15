@@ -1,11 +1,11 @@
 import * as path from 'path';
-import {executeRaw, PROJECT_DIR} from "./common/utils.js";
+import {cleanArg, executeRaw, PROJECT_DIR} from "./common/utils.js";
 import {rmSync} from "node:fs";
 import {ExecuteOptions} from "@common/types.js";
 
-const deployProjectId = process.argv[2];
-const deployEnv = process.argv[3];
-const customDomain = process.argv[4]; // optional
+const deployProjectId = cleanArg(process.argv[2]);
+const deployEnv = cleanArg(process.argv[3]);
+const customDomain = cleanArg(process.argv[4]); // optional
 
 console.log(`Deploying project ${deployProjectId} to environment ${deployEnv} using Custom Domain ${customDomain}`);
 

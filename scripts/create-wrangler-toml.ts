@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const targetFile = process.argv[2];
+const targetFile = process.argv[2]?.replace(/^["']|["']$/g, '');
 if (!targetFile) {
     console.error('Usage: tsx create-wrangler-toml.ts <target-path>');
     process.exit(1);
