@@ -32,6 +32,7 @@ const projectType = pulumiProperty(config, PROP.PROJECT_TYPE);
 const cloudFlareResource = pulumiProperty(config, PROP.CLOUDFLARE_RESOURCE)!;
 const environment = pulumiProperty(config, PROP.ENVIRONMENT);
 const customDomain = config.get(snakeToCamel("CUSTOM_DOMAIN"));
+const cronTrigger = config.get(snakeToCamel("CRON_TRIGGER"));
 
 const apiToken = config.requireSecret(snakeToCamel(PROP.CLOUDFLARE_API_TOKEN));
 const accountId = config.require(snakeToCamel(PROP.CLOUDFLARE_ACCOUNT_ID));
@@ -170,7 +171,20 @@ if (projectType == 'worker') {
         },
         {dependsOn: [worker, createWranglerToml]}
     );
-    deployment.push(deployWorker);
+    if (cronTrigger) {
+            console.log(`⏰ Creating cron trigger with schedules: ${cronTrigger}`);
+            const cronTriggerResource = new cloudflare.WorkersCronTrigger(`${projectId}_cron`, {
+                accountId: accountId,
+                scriptName: projectId,
+                schedules: cronTrigger
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                    .map(cron => ({ cron })),
+            }, { dependsOn: [deployWorker] });
+        }
+
+        deployment.push(deployWorker);
 }
 if (projectType == 'pages') {
     const pagesProject = new cloudflare.PagesProject(projectId, {
@@ -182,6 +196,7 @@ if (projectType == 'pages') {
             destinationDir: "dist",
         }
     });
+
     if (customDomain) {
         const pagesDomain = new cloudflare.PagesDomain(projectId + "_pagesdomain", {
             accountId: accountId,
