@@ -93,6 +93,11 @@ export function getConfigKey(rawKey: string): { snakeKey: string; camelKey: stri
     return {snakeKey:camelToSnake(cleanKey),camelKey: cleanKey};
 }
 
+export function cleanArg(arg: string | undefined): string | undefined {
+    if (!arg) return arg;
+    return arg.replace(/^["']|["']$/g, '');
+}
+
 export function propertyReader(filePath: string): PropertiesReader.Reader {
     if (!fs.existsSync(filePath)) {
         throw new Error(`Properties file not found: ${filePath}`);
@@ -113,8 +118,8 @@ export function argsOf(): CLIOptions {
     });
 
     return {
-        stackName: values.stack || positionals[0],
-        propertiesFile: values.properties,
+        stackName: cleanArg(values.stack || positionals[0]),
+        propertiesFile: cleanArg(values.properties),
         auto: values.auto || false
     };
 }
