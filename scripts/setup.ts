@@ -14,7 +14,7 @@ import {
     pulumiConfig,
     pulumiUp,
     validatePassPhrase,
-    snakeToCamel, ensurePulumiLogin, ExecuteOptions,  isStackValid
+    snakeToCamel, ensurePulumiLogin, ExecuteOptions, isStackValid
 } from "./common/index.js";
 import * as fs from "fs";
 
@@ -40,7 +40,7 @@ async function setup(options: CLIOptions): Promise<void> {
     }
     let stackName = extractStackName(reader.getRaw(PROP.BASE_URL)!);
     console.log(`🗓 Using Stack :${stackName}`)
-    const stackExists=await isStackValid(stackName,execOptions);
+    const stackExists = await isStackValid(stackName, execOptions);
     console.log(`\n🗓 ${stackName} exists ${stackExists}`)
 
     const cmdSetup = stackExists ? 'select' : 'init';
@@ -50,13 +50,37 @@ async function setup(options: CLIOptions): Promise<void> {
     await pulumiUp(execOptions);
 }
 
+function resolveValue(rawValue: string): string {
+    const missingVars = new Set<string>();
+
+    const result = rawValue.replace(/\$\{(\w+)\}/g, (_, envKey) => {
+        const envValue = process.env[envKey];
+        if (envValue === undefined) {
+            missingVars.add(envKey);
+            return `\${${envKey}}`;
+        }
+        return envValue;
+    });
+
+    if (missingVars.size > 0) {
+        throw new Error(
+            `Environment variable(s) not set: ${[...missingVars].join(", ")}`
+        );
+    }
+
+    return result;
+}
+
 async function setupPulumiConfig(reader: Reader, execOptions: ExecuteOptions) {
     const keys = Object.keys(reader.getAllProperties());
+
     for (const key of keys) {
         const rawValue = reader.getRaw(key)!;
-        await pulumiConfig(snakeToCamel(key), rawValue, isSecret(key), execOptions);
+        const resolvedValue = resolveValue(rawValue)
+        await pulumiConfig(snakeToCamel(key), resolvedValue, isSecret(key), execOptions);
     }
 }
+
 
 async function validateProperties(propertiesFile: string, auto: boolean): Promise<string> {
     if (fs.existsSync(propertiesFile)) {
