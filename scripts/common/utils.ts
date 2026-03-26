@@ -105,6 +105,26 @@ export function propertyReader(filePath: string): PropertiesReader.Reader {
     return PropertiesReader(filePath);
 }
 
+export function resolveValue(rawValue: string): string {
+    const missingVars = new Set<string>();
+
+    const result = rawValue.replace(/\$\{(\w+)\}/g, (_, envKey) => {
+        const envValue = process.env[envKey];
+        if (envValue === undefined) {
+            missingVars.add(envKey);
+            return `\${${envKey}}`;
+        }
+        return envValue;
+    });
+
+    if (missingVars.size > 0) {
+        throw new Error(
+            `Environment variable(s) not set: ${[...missingVars].join(", ")}`
+        );
+    }
+
+    return result;
+}
 
 export function argsOf(): CLIOptions {
     const { values, positionals } = parseArgs({

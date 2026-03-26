@@ -4,7 +4,7 @@
 
 
 import {CloudflareCredentials, PROP} from './types.js';
-import {executeRaw} from './utils.js';
+import {executeRaw, resolveValue} from './utils.js';
 import {Reader} from "properties-reader";
 
 export function getCloudflareEnv(creds: CloudflareCredentials): NodeJS.ProcessEnv {
@@ -31,8 +31,8 @@ export function getCloudflareEnv(creds: CloudflareCredentials): NodeJS.ProcessEn
 
 export function getProcessEnv(reader: Reader): NodeJS.ProcessEnv {
     let creds: CloudflareCredentials = {
-        apiToken: reader.getRaw(PROP.CLOUDFLARE_API_TOKEN)?.trim()!,
-        accountId: reader.getRaw(PROP.CLOUDFLARE_ACCOUNT_ID)?.trim()!
+        apiToken: resolveValue(reader.getRaw(PROP.CLOUDFLARE_API_TOKEN)!.trim()),
+        accountId: resolveValue(reader.getRaw(PROP.CLOUDFLARE_ACCOUNT_ID)!.trim())
     }
     const env = getCloudflareEnv(creds);
 

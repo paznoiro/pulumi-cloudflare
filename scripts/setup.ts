@@ -14,7 +14,7 @@ import {
     pulumiConfig,
     pulumiUp,
     validatePassPhrase,
-    snakeToCamel, ensurePulumiLogin, ExecuteOptions, isStackValid
+    snakeToCamel, ensurePulumiLogin, ExecuteOptions, isStackValid, resolveValue
 } from "./common/index.js";
 import * as fs from "fs";
 
@@ -50,26 +50,6 @@ async function setup(options: CLIOptions): Promise<void> {
     await pulumiUp(execOptions);
 }
 
-function resolveValue(rawValue: string): string {
-    const missingVars = new Set<string>();
-
-    const result = rawValue.replace(/\$\{(\w+)\}/g, (_, envKey) => {
-        const envValue = process.env[envKey];
-        if (envValue === undefined) {
-            missingVars.add(envKey);
-            return `\${${envKey}}`;
-        }
-        return envValue;
-    });
-
-    if (missingVars.size > 0) {
-        throw new Error(
-            `Environment variable(s) not set: ${[...missingVars].join(", ")}`
-        );
-    }
-
-    return result;
-}
 
 async function setupPulumiConfig(reader: Reader, execOptions: ExecuteOptions) {
     const keys = Object.keys(reader.getAllProperties());
