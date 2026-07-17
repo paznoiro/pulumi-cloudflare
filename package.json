@@ -34,5 +34,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module"
+  "type": "module",
+  "allowScripts": {
+    "@pulumi/command": true,
+    "esbuild": true,
+    "fsevents": true,
+    "protobufjs": true
+  }
 }
